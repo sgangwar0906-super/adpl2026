@@ -1,8 +1,8 @@
-const sheet="YOUR_SHEET_ID"
+const sheet="14C6hEU0LomlnzIKXzy7DqvfgsAQF0vmNNnDi3BovUOk"
 
-const pointsURL=`https://opensheet.elk.sh/${14C6hEU0LomlnzIKXzy7DqvfgsAQF0vmNNnDi3BovUOk}/points`
-const matchURL=`https://opensheet.elk.sh/${14C6hEU0LomlnzIKXzy7DqvfgsAQF0vmNNnDi3BovUOk}/matches`
-const seasonURL=`https://opensheet.elk.sh/${14C6hEU0LomlnzIKXzy7DqvfgsAQF0vmNNnDi3BovUOk}/season`
+const pointsURL=`https://opensheet.elk.sh/${sheet}/points`
+const matchURL=`https://opensheet.elk.sh/${sheet}/matches`
+const seasonURL=`https://opensheet.elk.sh/${sheet}/season`
 
 if(document.getElementById("leaderboard")){
 
