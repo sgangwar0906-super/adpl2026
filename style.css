@@ -1,14 +1,17 @@
 body{
-font-family:Arial;
-background:linear-gradient(135deg,#020617,#1e293b);
-color:white;
-text-align:center;
-}
+    margin:0;
+    font-family: Arial, sans-serif;
+    color:white;
 
+    background-image: url('background.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+}
 table{
-margin:auto;
-border-collapse:collapse;
-width:85%;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(5px);
 }
 
 th{
