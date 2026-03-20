@@ -89,6 +89,9 @@ table.innerHTML+=`
 <td>${p.Playoff2}</td>
 <td>${p.Playoff3}</td>
 <td>${p.Playoff4}</td>
+<td>${p.POTT1}</td>
+<td>${p.POTT2}</td>
+<td>${p.POTT3}</td>
 </tr>
 `
 
