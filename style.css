@@ -22,8 +22,11 @@ table{
     backdrop-filter: blur(6px);
 }
 
-th{
-background:#f59e0b;
+th {
+  background: linear-gradient(90deg, #2c2c2c, #1a1a1a);
+  color: #ffffff;
+  padding: 10px;
+  border: 1px solid #444;
 }
 
 td,th{
@@ -42,4 +45,100 @@ background:#334155;
 h1{
     text-align:center;
     margin-top:40px;
+}
+.rules-box {
+  width: 85%;
+  max-width: 850px;
+  margin: 60px auto;
+  padding: 30px;
+
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
+
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  border: 1px solid rgba(255, 255, 255, 0.25);
+
+  color: white;
+
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+
+  transition: all 0.3s ease;
+}
+
+/* 🔥 Hover Effect */
+.rules-box:hover {
+  transform: translateY(-8px) scale(1.01);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
+}
+
+/* ✨ Heading Styling */
+.rules-box h1 {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 28px;
+}
+
+/* 🟡 Section Titles */
+.rules-box h2 {
+  margin-top: 20px;
+  color: #ffd700;
+}
+
+/* 📄 Text */
+.rules-box p {
+  margin: 5px 0;
+  line-height: 1.6;
+}
+
+/* 🌟 Subtle Glow Border Animation */
+.rules-box::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  padding: 1px;
+  background: linear-gradient(120deg, transparent, rgba(255,255,255,0.4), transparent);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  pointer-events: none;
+}
+.ipl-links {
+  width: 300px;
+  margin: 50px auto; /* center horizontally */
+  padding: 20px;
+
+  text-align: center;
+
+  background: rgba(255, 255, 255, 0.15); /* translucent */
+  border-radius: 15px;
+
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  border: 1px solid rgba(255,255,255,0.3);
+
+  box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+}
+
+/* Links styling */
+.ipl-links a {
+  text-decoration: none;
+  color: white;
+  display: block;
+  margin: 10px 0;
+}
+
+/* Hover effect 🔥 */
+.ipl-links a:hover {
+  color: #ffd700;
+  transform: scale(1.05);
+  transition: 0.3s;
+}
+.heading-img {
+  display: block;
+  margin: 20px auto;
+  width: 80%;   /* adjust size */
+  max-width: 600px;
 }
