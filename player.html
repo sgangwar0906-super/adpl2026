@@ -1,56 +1,200 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en" data-theme="dark">
 <head>
-<title>Player Profile</title>
-<link rel="stylesheet" href="style.css">
-<script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>ADPL · Player Profile </title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* small inline for consistent loading */
+    .player-profile-hero {
+      margin-bottom: 2rem;
+    }
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--card-bg);
+      padding: 0.5rem 1.2rem;
+      border-radius: 40px;
+      text-decoration: none;
+      color: var(--text-primary);
+      font-weight: 500;
+      border: 1px solid var(--border-light);
+      transition: all 0.2s;
+      margin-bottom: 1.8rem;
+    }
+    .back-link:hover {
+      border-color: var(--accent-gold);
+      transform: translateX(-4px);
+      background: var(--hover-bg);
+    }
+    .stats-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+    .data-table-wrapper {
+      background: var(--glass-bg);
+      backdrop-filter: blur(12px);
+      border-radius: 28px;
+      padding: 1rem;
+      border: 1px solid var(--border-soft);
+      overflow-x: auto;
+    }
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+    .data-table th {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 1rem 0.8rem;
+      color: var(--accent-gold);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-size: 0.7rem;
+    }
+    .data-table td {
+      padding: 0.8rem 0.6rem;
+      border-bottom: 1px solid var(--border-soft);
+      text-align: center;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+    .data-table tr:hover td {
+      background: var(--hover-table);
+    }
+    @media (max-width: 700px) {
+      .data-table th, .data-table td {
+        padding: 0.6rem 0.3rem;
+        font-size: 0.7rem;
+      }
+    }
+  </style>
 </head>
-
 <body>
 
-<h1 id="playerName"></h1>
+  <nav class="navbar">
+    <div class="logo">
+      <span class="logo-icon">🏏</span> ADPL·2026
+    </div>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">🏠 Leaderboard</a>
+      <a href="player.html" class="nav-link active">👤 Player Profile</a>
+      <button id="themeToggle" class="theme-switch" aria-label="Dark/Light mode">
+        <span class="theme-icon">🌙</span>
+        <span class="theme-text">Light</span>
+      </button>
+    </div>
+  </nav>
 
-<h2>Season Predictions</h2>
+  <main class="main-container">
+    <div class="player-profile-hero">
+      <a href="index.html" class="back-link">← Back to Leaderboard</a>
+      <div class="profile-header-card">
+        <h1 id="playerName" class="player-name-glow">Player Profile</h1>
+        <div class="player-badge">🏅 fantasy scout</div>
+      </div>
+    </div>
 
-<table id="seasonTable">
+    <div class="stats-grid">
+      <!-- Season predictions table -->
+      <div class="data-table-wrapper">
+        <div class="section-title-small">📊 SEASON PREDICTIONS</div>
+        <div class="table-responsive-mini">
+          <table id="seasonTable" class="data-table">
+            <thead>
+              <tr>
+                <th>Orange1</th><th>Orange2</th><th>Orange3</th>
+                <th>Purple1</th><th>Purple2</th><th>Purple3</th>
+                <th>Winner</th><th>Playoff1</th><th>Playoff2</th>
+                <th>Playoff3</th><th>Playoff4</th>
+                <th>POTT1</th><th>POTT2</th><th>POTT3</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+      
+      <!-- Match predictions table -->
+      <div class="data-table-wrapper">
+        <div class="section-title-small">⚡ MATCH PREDICTIONS</div>
+        <div class="table-responsive-mini">
+          <table id="matchTable" class="data-table">
+            <thead>
+              <tr>
+                <th>Match</th><th>Winner Prediction</th><th>Correct</th><th>Points</th>
+                <th>MOTM Prediction</th><th>Correct</th><th>Points</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    
+    <div class="info-note">
+      💡 *Points update after each match — predictions locked before toss*
+    </div>
+  </main>
 
-<tr>
-<th>Orange1</th>
-<th>Orange2</th>
-<th>Orange3</th>
-<th>Purple1</th>
-<th>Purple2</th>
-<th>Purple3</th>
-<th>Winner</th>
-<th>Playoff1</th>
-<th>Playoff2</th>
-<th>Playoff3</th>
-<th>Playoff4</th>
-<th>POTT1</th>
-<th>POTT2</th>
-<th>POTT3</th>
-</tr>
+  <footer class="footer">
+    <div class="footer-content">
+      <span>⚡ Official Partner:</span>
+      <a href="https://chat.whatsapp.com/GcFsctnWN2iB9OV8GofVut?mode=gi_t" target="_blank" class="footer-link">
+        <img src="footer.png" alt="Join ADPL Community">
+      </a>
+    </div>
+    <div class="footer-copyright">© ADPL 2026 · Elite Fantasy Cricket League</div>
+  </footer>
 
-</table>
-<h2>Match Predictions</h2>
-
-<table id="matchTable">
-
-<tr>
-<th>Match</th>
-<th>Winner Prediction</th>
-<th>Correct</th>
-<th>Points</th>
-<th>MOTM Prediction</th>
-<th>Correct</th>
-<th>Points</th>
-</tr>
-
-</table>
-
-<script src="script.js"></script>
-
+  <script src="script.js"></script>
+  <script>
+    (function() {
+      const themeToggle = document.getElementById('themeToggle');
+      const htmlElement = document.documentElement;
+      const themeIconSpan = themeToggle?.querySelector('.theme-icon');
+      const themeTextSpan = themeToggle?.querySelector('.theme-text');
+      
+      const getStoredTheme = () => localStorage.getItem('adpl-theme');
+      const getSystemTheme = () => window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+      
+      const applyTheme = (theme) => {
+        htmlElement.setAttribute('data-theme', theme);
+        localStorage.setItem('adpl-theme', theme);
+        if (themeToggle) {
+          if (theme === 'dark') {
+            if (themeIconSpan) themeIconSpan.textContent = '🌙';
+            if (themeTextSpan) themeTextSpan.textContent = 'Light';
+          } else {
+            if (themeIconSpan) themeIconSpan.textContent = '☀️';
+            if (themeTextSpan) themeTextSpan.textContent = 'Dark';
+          }
+        }
+      };
+      
+      const toggleTheme = () => {
+        const current = htmlElement.getAttribute('data-theme') || 'dark';
+        const newTheme = current === 'dark' ? 'light' : 'dark';
+        applyTheme(newTheme);
+      };
+      
+      if (themeToggle) themeToggle.addEventListener('click', toggleTheme);
+      
+      const initialTheme = getStoredTheme() || getSystemTheme();
+      applyTheme(initialTheme);
+      
+      window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', (e) => {
+        if (!localStorage.getItem('adpl-theme')) {
+          applyTheme(e.matches ? 'light' : 'dark');
+        }
+      });
+    })();
+  </script>
 </body>
-
 </html>

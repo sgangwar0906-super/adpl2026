@@ -1,111 +1,78 @@
+<!-- index.html -->
 <!DOCTYPE html>
-<html>
-
+<html lang="en" data-theme="dark">
 <head>
-<title>ANISHT DEV POLL LEAGUE</title>
-<link rel="stylesheet" href="style.css">
-<script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>ADPL 2026 · Elite Fantasy Cricket League</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@300..800&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* inline for quick override if needed */
+  </style>
 </head>
-
 <body>
- <a href="https://adpl2026.vercel.app/" target="_blank">
-<img src="heading.png" alt="ADPL Heading" class="heading-img">
- </a>
-<br>
-<div style="display: flex; gap: 10px;">
-  <img src="play.png" width="830">
-</div>
-<br>
-<br>
-<img src="points.png" width="240">
-<table id="leaderboard">
-<tr>
-<th>Rank</th>
-<th>Player</th>
-<th>Winner Pts</th>
-<th>MOTM Pts</th>
-<th>Season Pts</th>
-<th>Total</th>
-</tr>
+  <nav class="navbar">
+    <div class="logo"><span class="logo-icon">🏏</span> ADPL·2026</div>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link active">🏠 Leaderboard</a>
+      <a href="pp.html" class="nav-link">👤 Player Profiles</a>
+      <a href="pw.html" class="nav-link">🏆 Previous Winners</a>
+      <a href="stats.html" class="nav-link">📊 Stats</a>
+      <a href="journey.html" class="nav-link">📈 Journey</a>
+      <a href="more.html" class="nav-link">📖 More</a>
+      <a href="rules.html" class="nav-link">📜 Rules</a>
+      <select id="themeSelector" class="theme-selector">
+        <option value="green-silver">🌿 Green-Silver</option>
+        <option value="red-gold">🔥 Red-Gold</option>
+        <option value="blue-black">💙 Blue-Black</option>
+        <option value="csk">🟡💙 CSK (Yellow-Blue)</option>
+        <option value="mi">🔵🟡 MI (Blue-Gold)</option>
+        <option value="rcb">🔴⚫ RCB (Red-Black)</option>
+        <option value="kkr">🟣🟡 KKR (Purple-Gold)</option>
+        <option value="dc">🔵🔴 DC (Blue-Red)</option>
+        <option value="pbks">🔴⚪ PBKS (Red-Silver)</option>
+        <option value="rr">🩷🔵 RR (Pink-Blue)</option>
+        <option value="srh">🟠⚫ SRH (Orange-Black)</option>
+        <option value="lsg">🔵🔴 LSG (Blue-Red)</option>
+        <option value="gt">🔵⚪ GT (Blue-Silver)</option>
+      </select>
+    </div>
+  </nav>
 
-</table>
-
-<script src="script.js"></script>
-
-<br>
-<br>
-<div class="ipl-links">
+  <main class="main-container">
+      
+    <div class="stats-panel">
+      <div class="live-badge-enhanced"><span class="pulse-dot"></span> LIVE · UPDATED POST MATCH</div>
+    </div>
+    
+    <div class="leaderboard-wrapper">
+      <div class="leaderboard-header">
+        <h2 class="section-title">🏆 SEASON STANDINGS</h2>
+        <div class="leaderboard-sub"></div>
+      </div>
+      <div class="table-responsive">
+        <table id="leaderboard">
+          <thead><tr><th>Rank</th><th>Player</th><th>Winner Pts</th><th>MOTM Pts</th><th>Season Pts</th><th>Total</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="league-subtle"></div>
+    </div>
+    
+    <div class="ipl-links">
+      <a href="https://www.iplt20.com/points-table/2026" target="_blank" class="ipl-card"><span class="card-emoji">🏆</span><h2>IPL POINTS TABLE</h2></a>
+      <a href="https://www.iplt20.com/stats/2026" target="_blank" class="ipl-card"><span class="card-emoji">🏏</span><h2>CAPS LEADERBOARD</h2></a>
+    </div>
+    
+   
+  </main>
   
-  <a href="https://www.iplt20.com/points-table/2026" target="_blank">
-    <h2>IPL POINTS TABLE</h2>
-  </a>
+  <footer class="footer">
+    <div class="footer-content"><span>⚡ Official Partner:</span><a href="https://chat.whatsapp.com/GcFsctnWN2iB9OV8GofVut?mode=gi_t" target="_blank" class="footer-link"><img src="footer.png" alt="Join ADPL Community"></a></div>
+    <div class="footer-copyright">© ADPL 2026</div>
+  </footer>
 
-  <a href="https://www.iplt20.com/stats/2026" target="_blank">
-    <h2>CAPS LEADERBOARD</h2>
-  </a>
-
-</div>
-<br>
-<br>
-<div class="rules-box">
-  <h1>🏏 ADPL 2026 – OFFICIAL RULES & POINT SYSTEM</h1>
-
-  <h2>🔮 Match Predictions</h2>
-  <p>Match Winner → +2 points</p>
-  <p>Man of the Match → +5 points</p>
-  <p><b>Max per match = 7 points</b></p>
-
-  <h2>🧾 Season Predictions</h2>
-
-  <h3>🏆 Tournament Winner</h3>
-  <p>Correct → +20 points</p>
-
-  <h3>🔝 Top 4 Playoff Teams</h3>
-  <p>Each correct team → +10 points</p>
-
-  <h3>🧡 Orange Cap | 💜 Purple Cap | 👑 POTT</h3>
-  <p>1st Choice → +15 points</p>
-  <p>2nd Choice → +12 points</p>
-  <p>3rd Choice → +10 points</p>
-
-  <h2>❌ Wrong Prediction</h2>
-  <p>Any wrong or missed prediction → 0 points</p>
-
-  <h2>⏰ Deadlines</h2>
-  <p>Winner → Before toss</p>
-  <p>MOTM → Before match starts</p>
-  <p>Season predictions → 1 day before IPL</p>
-
-  <h2>🏆 Goal</h2>
-  <p>Become ADPL Champion 2026</p>
-</div>
-<footer class="footer">
-  <span>Official Partner:</span>
-
-  <a href="https://chat.whatsapp.com/GcFsctnWN2iB9OV8GofVut?mode=gi_t" target="_blank">
-    <img src="footer.png" alt="Partner Logo">
-  </a>
-</footer>
-
-<style>
-.footer {
-  position: ;
-  bottom: 0;
-  width: 100%;
-  text-align: center;
-  padding: 12px;
-  color: white;
-
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(8px);
-}
-
-.footer img {
-  height: 60px;
-  margin-left: 10px;
-  cursor: pointer;
-}
-</style>
+  <script src="script.js"></script>
 </body>
-
 </html>

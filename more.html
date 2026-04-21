@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <title>ADPL · More Stats</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@300..800&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body { background-image: url('bg.png'); background-size: cover; background-attachment: fixed; }
+    
+    /* Responsive video container */
+    .video-wrapper {
+      position: relative;
+      width: 100%;
+      padding-bottom: 56.25%; /* 16:9 aspect ratio */
+      height: 0;
+      overflow: hidden;
+      border-radius: 16px;
+    }
+    .video-wrapper iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="logo"><span class="logo-icon">🏏</span> ADPL·2026</div>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">🏠 Leaderboard</a>
+      <a href="pp.html" class="nav-link">👤 Player Profiles</a>
+      <a href="pw.html" class="nav-link">🏆 Previous Winners</a>
+      <a href="stats.html" class="nav-link">📊 Stats</a>
+      <a href="journey.html" class="nav-link">📈 Journey</a>
+      <a href="more.html" class="nav-link active">📖 More</a>
+      <a href="rules.html" class="nav-link">📜 Rules</a>
+      <select id="themeSelector" class="theme-selector">
+        <option value="green-silver">🌿 Green-Silver</option>
+        <option value="red-gold">🔥 Red-Gold</option>
+        <option value="blue-black">💙 Blue-Black</option>
+        <option value="csk">🟡💙 CSK</option>
+        <option value="mi">🔵🟡 MI</option>
+        <option value="rcb">🔴⚫ RCB</option>
+        <option value="kkr">🟣🟡 KKR</option>
+        <option value="dc">🔵🔴 DC</option>
+        <option value="pbks">🔴⚪ PBKS</option>
+        <option value="rr">🩷🔵 RR</option>
+        <option value="srh">🟠⚫ SRH</option>
+        <option value="lsg">🔵🔴 LSG</option>
+        <option value="gt">🔵⚪ GT</option>
+      </select>
+    </div>
+  </nav>
+  <main class="main-container">
+    <h1 class="section-title" style="text-align:center;">🏏 ADPL Extra Innings</h1>
+    <div class="stats-container">
+      <div class="stat-card">
+        <div class="stat-title">🔥 Players Intro</div>
+        <div class="video-wrapper">
+          <iframe src="https://www.youtube.com/embed/8T4vxCnTiNc?si=--utiLrm8MAdp3GQ" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-title">⚡ ADPL Theme</div>
+        <p><audio controls>
+          <source src="theme.mp3" type="audio/mpeg">
+          Your browser does not support the audio element.
+        </audio></p>
+      </div>
+      <div class="stat-card">
+        <div class="stat-title">🙏 Special Thanks</div>
+        <p><img src="background.png" alt="Lord Voldemort" style="width:100%; height:auto; border-radius:15px;"></p>
+      </div>
+    </div>
+  </main>
+  <footer class="footer">
+    <div class="footer-content"><span>⚡ Official Partner:</span><a href="https://chat.whatsapp.com/GcFsctnWN2iB9OV8GofVut?mode=gi_t" target="_blank" class="footer-link"><img src="footer.png" alt="Join ADPL Community"></a></div>
+    <div class="footer-copyright">© ADPL 2026</div>
+  </footer>  
+  <script src="script.js"></script>
+</body>
+</html>

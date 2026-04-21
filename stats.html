@@ -1,0 +1,277 @@
+<!-- stats.html (enhanced with individual most chosen, playoffs, POTT) -->
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <title>ADPL · Prediction Stats</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@300..800&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    body { background-image: url('bg.png'); background-size: cover; background-attachment: fixed; }
+    .chart-container {
+      background: var(--surface-glass);
+      backdrop-filter: blur(12px);
+      border-radius: 28px;
+      padding: 1.5rem;
+      margin: 2rem 0;
+      border: 1px solid var(--border-light);
+    }
+    .chart-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 2rem;
+    }
+    canvas { max-height: 300px; width: 100% !important; }
+    .stats-subtitle {
+      font-size: 1.4rem;
+      margin: 1.5rem 0 0.5rem;
+      color: var(--accent-secondary);
+    }
+    .player-stats-select {
+      background: var(--surface-glass);
+      border: 1px solid var(--border-light);
+      color: var(--text-primary);
+      padding: 0.8rem 1.5rem;
+      border-radius: 60px;
+      font-size: 1rem;
+      font-weight: 600;
+      backdrop-filter: blur(8px);
+      min-width: 250px;
+    }
+    .stats-card {
+      background: var(--surface-glass);
+      backdrop-filter: blur(8px);
+      border-radius: 20px;
+      padding: 1.2rem;
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="logo"><span class="logo-icon">🏏</span> ADPL·2026</div>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">🏠 Leaderboard</a>
+      <a href="pp.html" class="nav-link">👤 Player Profiles</a>
+      <a href="pw.html" class="nav-link">🏆 Previous Winners</a>
+      <a href="stats.html" class="nav-link active">📊 Stats</a>
+      <a href="journey.html" class="nav-link">📈 Journey</a>
+      <a href="more.html" class="nav-link">📖 More</a>
+      <a href="rules.html" class="nav-link">📜 Rules</a>
+      <select id="themeSelector" class="theme-selector">
+        <option value="green-silver">🌿 Green-Silver</option>
+        <option value="red-gold">🔥 Red-Gold</option>
+        <option value="blue-black">💙 Blue-Black</option>
+        <option value="csk">🟡💙 CSK</option>
+        <option value="mi">🔵🟡 MI</option>
+        <option value="rcb">🔴⚫ RCB</option>
+        <option value="kkr">🟣🟡 KKR</option>
+        <option value="dc">🔵🔴 DC</option>
+        <option value="pbks">🔴⚪ PBKS</option>
+        <option value="rr">🩷🔵 RR</option>
+        <option value="srh">🟠⚫ SRH</option>
+        <option value="lsg">🔵🔴 LSG</option>
+        <option value="gt">🔵⚪ GT</option>
+      </select>
+    </div>
+  </nav>
+
+  <main class="main-container">
+    <h1 class="section-title" style="text-align:center;">📊 Community & Individual Stats</h1>
+    
+    <!-- Overall winner chart -->
+    <div class="chart-container">
+      <h2 class="stats-subtitle">🏆 Most Predicted IPL Winner</h2>
+      <canvas id="winnerChart"></canvas>
+    </div>
+    
+    <div class="chart-grid">
+      <div class="chart-container">
+        <h2 class="stats-subtitle">🧡 Orange Cap Favorites</h2>
+        <canvas id="orangeChart"></canvas>
+      </div>
+      <div class="chart-container">
+        <h2 class="stats-subtitle">💜 Purple Cap Favorites</h2>
+        <canvas id="purpleChart"></canvas>
+      </div>
+    </div>
+    
+    <!-- New: Most selected Playoff Teams & POTT -->
+    <div class="chart-grid">
+      <div class="chart-container">
+        <h2 class="stats-subtitle">🔝 Most Selected Playoff Teams</h2>
+        <canvas id="playoffChart"></canvas>
+      </div>
+      <div class="chart-container">
+        <h2 class="stats-subtitle">👑 Most Selected POTT</h2>
+        <canvas id="pottChart"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-container">
+      <h2 class="stats-subtitle">⚡ Most Predicted MOTM (Overall)</h2>
+      <canvas id="motmChart"></canvas>
+    </div>
+
+    <!-- Individual contestant stats: most chosen MOTM and Winner -->
+    <div class="chart-container">
+      <h2 class="stats-subtitle">👤 Individual Favorites</h2>
+      <label for="playerStatsSelect">Select Contestant:</label>
+      <select id="playerStatsSelect" class="player-stats-select"></select>
+      <div id="individualStatsDisplay" class="stats-card" style="margin-top:1.5rem;">
+        <p>Select a player to see their most predicted MOTM and IPL Winner.</p>
+      </div>
+    </div>
+
+    <div class="info-note">📋 Based on all predictions. Updated regularly.</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-content"><span>⚡ Official Partner:</span><a href="https://chat.whatsapp.com/GcFsctnWN2iB9OV8GofVut?mode=gi_t" target="_blank" class="footer-link"><img src="footer.png" alt="Join ADPL Community"></a></div>
+    <div class="footer-copyright">© ADPL 2026</div>
+  </footer>
+
+  <script src="script.js"></script>
+  <script>
+    (function() {
+      const sheet = "14C6hEU0LomlnzIKXzy7DqvfgsAQF0vmNNnDi3BovUOk";
+      const seasonURL = `https://opensheet.elk.sh/${sheet}/season`;
+      const matchURL = `https://opensheet.elk.sh/${sheet}/matches`;
+      const pointsURL = `https://opensheet.elk.sh/${sheet}/points`;
+
+      let seasonData = [], matchData = [], allPlayers = [];
+      const playerStatsSelect = document.getElementById('playerStatsSelect');
+      const individualDiv = document.getElementById('individualStatsDisplay');
+
+      async function fetchStats() {
+        try {
+          const [seasonRes, matchRes, pointsRes] = await Promise.all([
+            fetch(seasonURL).then(r => r.json()),
+            fetch(matchURL).then(r => r.json()),
+            fetch(pointsURL).then(r => r.json())
+          ]);
+          seasonData = seasonRes;
+          matchData = matchRes;
+          allPlayers = [...new Set(pointsRes.map(p => p.Player))].sort();
+          populatePlayerSelect();
+          
+          // Overall charts
+          renderOverallCharts();
+          
+          // Individual stats
+          playerStatsSelect.addEventListener('change', (e) => {
+            if (e.target.value) showIndividualStats(e.target.value);
+          });
+          if (allPlayers.length) {
+            playerStatsSelect.value = allPlayers[0];
+            showIndividualStats(allPlayers[0]);
+          }
+        } catch(e) {
+          console.error(e);
+        }
+      }
+
+      function populatePlayerSelect() {
+        playerStatsSelect.innerHTML = '<option value="">-- Select Contestant --</option>';
+        allPlayers.forEach(p => {
+          const opt = document.createElement('option');
+          opt.value = p;
+          opt.textContent = p;
+          playerStatsSelect.appendChild(opt);
+        });
+      }
+
+      function renderOverallCharts() {
+        // Winner
+        const winnerCounts = {};
+        seasonData.forEach(row => { if (row.Winner) winnerCounts[row.Winner] = (winnerCounts[row.Winner] || 0) + 1; });
+        
+        // Orange
+        const orangeCounts = {};
+        seasonData.forEach(row => {
+          ['Orange1','Orange2','Orange3'].forEach(k => { if(row[k]) orangeCounts[row[k]] = (orangeCounts[row[k]] || 0) + 1; });
+        });
+        // Purple
+        const purpleCounts = {};
+        seasonData.forEach(row => {
+          ['Purple1','Purple2','Purple3'].forEach(k => { if(row[k]) purpleCounts[row[k]] = (purpleCounts[row[k]] || 0) + 1; });
+        });
+        // Playoff teams (Playoff1-4)
+        const playoffCounts = {};
+        seasonData.forEach(row => {
+          ['Playoff1','Playoff2','Playoff3','Playoff4'].forEach(k => { if(row[k]) playoffCounts[row[k]] = (playoffCounts[row[k]] || 0) + 1; });
+        });
+        // POTT (POTT1,2,3)
+        const pottCounts = {};
+        seasonData.forEach(row => {
+          ['POTT1','POTT2','POTT3'].forEach(k => { if(row[k]) pottCounts[row[k]] = (pottCounts[row[k]] || 0) + 1; });
+        });
+        // MOTM
+        const motmCounts = {};
+        matchData.forEach(row => { if(row.MOTMPrediction) motmCounts[row.MOTMPrediction] = (motmCounts[row.MOTMPrediction] || 0) + 1; });
+
+        function renderChart(ctxId, dataObj, label, limit=8) {
+          const sorted = Object.entries(dataObj).sort((a,b) => b[1] - a[1]).slice(0, limit);
+          const ctx = document.getElementById(ctxId).getContext('2d');
+          new Chart(ctx, {
+            type: 'bar',
+            data: {
+              labels: sorted.map(x => x[0]),
+              datasets: [{
+                label: label,
+                data: sorted.map(x => x[1]),
+                backgroundColor: 'rgba(192, 192, 192, 0.6)',
+                borderColor: 'var(--accent-primary)',
+                borderWidth: 2
+              }]
+            },
+            options: {
+              responsive: true,
+              plugins: { legend: { labels: { color: 'var(--text-primary)' } } },
+              scales: {
+                y: { beginAtZero: true, grid: { color: 'var(--border-soft)' }, ticks: { color: 'var(--text-secondary)' } },
+                x: { ticks: { color: 'var(--text-primary)' } }
+              }
+            }
+          });
+        }
+
+        renderChart('winnerChart', winnerCounts, 'Times predicted as Winner');
+        renderChart('orangeChart', orangeCounts, 'Orange Cap picks');
+        renderChart('purpleChart', purpleCounts, 'Purple Cap picks');
+        renderChart('playoffChart', playoffCounts, 'Playoff team selections', 10);
+        renderChart('pottChart', pottCounts, 'POTT selections', 8);
+        renderChart('motmChart', motmCounts, 'MOTM predictions', 10);
+      }
+
+      function showIndividualStats(player) {
+        // Most chosen MOTM by this player
+        const playerMOTMs = matchData.filter(m => m.Player === player).map(m => m.MOTMPrediction).filter(v => v);
+        const motmFreq = {};
+        playerMOTMs.forEach(m => motmFreq[m] = (motmFreq[m] || 0) + 1);
+        const topMOTM = Object.entries(motmFreq).sort((a,b) => b[1] - a[1])[0];
+        
+        // Most chosen Winner by this player (from match winner predictions)
+        const playerWinners = matchData.filter(m => m.Player === player).map(m => m.WinnerPrediction).filter(v => v);
+        const winnerFreq = {};
+        playerWinners.forEach(w => winnerFreq[w] = (winnerFreq[w] || 0) + 1);
+        const topWinner = Object.entries(winnerFreq).sort((a,b) => b[1] - a[1])[0];
+        
+        // Also season winner prediction (single)
+        const seasonPick = seasonData.find(s => s.Player === player);
+        const seasonWinner = seasonPick ? seasonPick.Winner : 'N/A';
+        
+        let html = `<p><strong>${player}</strong> most predicted:</p>`;
+        html += `<p>🏆 MOTM: <span style="color:var(--accent-secondary);">${topMOTM ? `${topMOTM[0]} (${topMOTM[1]} times)` : 'None'}</span></p>`;
+        html += `<p>🎯 Match Winner: <span style="color:var(--accent-secondary);">${topWinner ? `${topWinner[0]} (${topWinner[1]} times)` : 'None'}</span></p>`;
+        html += `<p>🏁 Season Winner Pick: <span style="color:var(--accent-secondary);">${seasonWinner}</span></p>`;
+        individualDiv.innerHTML = html;
+      }
+
+      fetchStats();
+    })();
+  </script>
+</body>
+</html>

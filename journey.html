@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <title>ADPL · Point & Rank Journey</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@300..800&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    body { background-image: url('bg.png'); background-size: cover; background-attachment: fixed; }
+    .journey-controls {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 2rem;
+    }
+    .player-select {
+      background: var(--surface-glass);
+      border: 1px solid var(--border-light);
+      color: var(--text-primary);
+      padding: 0.8rem 1.5rem;
+      border-radius: 60px;
+      font-size: 1rem;
+      font-weight: 600;
+      backdrop-filter: blur(8px);
+      min-width: 250px;
+    }
+    .chart-box {
+      background: var(--surface-glass);
+      backdrop-filter: blur(12px);
+      border-radius: 28px;
+      padding: 1.5rem;
+      border: 1px solid var(--border-light);
+      margin-bottom: 2rem;
+    }
+    .chart-container {
+      position: relative;
+      width: 100%;
+      height: 350px;
+    }
+    @media (max-width: 768px) {
+      .chart-container { height: 280px; }
+      .chart-box { padding: 1rem; }
+    }
+    @media (max-width: 480px) {
+      .chart-container { height: 250px; }
+    }
+    canvas { display: block; width: 100% !important; height: 100% !important; }
+    .toggle-buttons {
+      display: flex;
+      gap: 1rem;
+      margin: 1rem 0;
+    }
+    .toggle-btn {
+      background: var(--surface-glass);
+      border: 1px solid var(--border-light);
+      color: var(--text-primary);
+      padding: 0.5rem 1.5rem;
+      border-radius: 40px;
+      font-weight: 600;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+    }
+    .toggle-btn.active {
+      background: var(--accent-primary);
+      color: var(--bg-primary);
+      border-color: var(--accent-primary);
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="logo"><span class="logo-icon">🏏</span> ADPL·2026</div>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">🏠 Leaderboard</a>
+      <a href="pp.html" class="nav-link">👤 Player Profiles</a>
+      <a href="pw.html" class="nav-link">🏆 Previous Winners</a>
+      <a href="stats.html" class="nav-link">📊 Stats</a>
+      <a href="journey.html" class="nav-link active">📈 Journey</a>
+      <a href="more.html" class="nav-link">📖 More</a>
+      <a href="rules.html" class="nav-link">📜 Rules</a>
+      <select id="themeSelector" class="theme-selector">
+        <option value="green-silver">🌿 Green-Silver</option>
+        <option value="red-gold">🔥 Red-Gold</option>
+        <option value="blue-black">💙 Blue-Black</option>
+        <option value="csk">🟡💙 CSK</option>
+        <option value="mi">🔵🟡 MI</option>
+        <option value="rcb">🔴⚫ RCB</option>
+        <option value="kkr">🟣🟡 KKR</option>
+        <option value="dc">🔵🔴 DC</option>
+        <option value="pbks">🔴⚪ PBKS</option>
+        <option value="rr">🩷🔵 RR</option>
+        <option value="srh">🟠⚫ SRH</option>
+        <option value="lsg">🔵🔴 LSG (Blue-Red)</option>
+        <option value="gt">🔵⚪ GT</option>
+      </select>
+    </div>
+  </nav>
+
+  <main class="main-container">
+    <h1 class="section-title" style="text-align:center;">📈 Player Journey</h1>
+    <div class="journey-controls">
+      <label for="playerSelect" style="font-weight:600;">Select Player:</label>
+      <select id="playerSelect" class="player-select"></select>
+    </div>
+
+    <div class="toggle-buttons">
+      <button id="showPointsBtn" class="toggle-btn active">📊 Points Journey</button>
+      <button id="showRankBtn" class="toggle-btn">🏅 Rank Journey</button>
+    </div>
+    
+    <div class="chart-box" id="pointsChartContainer">
+      <div class="chart-container">
+        <canvas id="journeyChart"></canvas>
+      </div>
+    </div>
+    <div class="chart-box" id="rankChartContainer" style="display:none;">
+      <div class="chart-container">
+        <canvas id="rankChart"></canvas>
+      </div>
+    </div>
+    <div class="info-note">📌 Season points will be added at end of the tournament </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-content"><span>⚡ Official Partner:</span><a href="https://chat.whatsapp.com/GcFsctnWN2iB9OV8GofVut?mode=gi_t" target="_blank" class="footer-link"><img src="footer.png" alt="Join ADPL Community"></a></div>
+    <div class="footer-copyright">© ADPL 2026</div>
+  </footer>
+
+  <script src="script.js"></script>
+  <script>
+    (function() {
+      const sheet = "14C6hEU0LomlnzIKXzy7DqvfgsAQF0vmNNnDi3BovUOk";
+      const pointsURL = `https://opensheet.elk.sh/${sheet}/points`;
+      const matchURL = `https://opensheet.elk.sh/${sheet}/matches`;
+      const seasonURL = `https://opensheet.elk.sh/${sheet}/season`;
+
+      let allPlayers = [];
+      let matchData = [];
+      let seasonData = [];
+      let pointsData = [];
+      let pointsChart = null, rankChart = null;
+
+      const playerSelect = document.getElementById('playerSelect');
+      const ctxPoints = document.getElementById('journeyChart').getContext('2d');
+      const ctxRank = document.getElementById('rankChart').getContext('2d');
+      
+      const showPointsBtn = document.getElementById('showPointsBtn');
+      const showRankBtn = document.getElementById('showRankBtn');
+      const pointsContainer = document.getElementById('pointsChartContainer');
+      const rankContainer = document.getElementById('rankChartContainer');
+
+      showPointsBtn.addEventListener('click', () => {
+        pointsContainer.style.display = 'block';
+        rankContainer.style.display = 'none';
+        showPointsBtn.classList.add('active');
+        showRankBtn.classList.remove('active');
+      });
+      showRankBtn.addEventListener('click', () => {
+        pointsContainer.style.display = 'none';
+        rankContainer.style.display = 'block';
+        showRankBtn.classList.add('active');
+        showPointsBtn.classList.remove('active');
+      });
+
+      // Robust match ordering: parses league match number or playoff stage
+      function getMatchOrder(matchStr) {
+        if (!matchStr) return 9999;
+        const str = String(matchStr).trim().toLowerCase();
+        
+        // Playoffs: exact keywords (order: Q1, Eliminator, Q2, Final)
+        if (str.includes('qualifier 1') || str.includes('qualifier1') || str === 'q1') return 71;
+        if (str.includes('eliminator') || str === 'e') return 72;
+        if (str.includes('qualifier 2') || str.includes('qualifier2') || str === 'q2') return 73;
+        if (str.includes('final') || str === 'f') return 74;
+        
+        // League match: extract number from "Match X", "M X", or just number
+        const matchNum = str.match(/(?:match|m)?\s*(\d+)/i);
+        if (matchNum) {
+          const num = parseInt(matchNum[1]);
+          if (num >= 1 && num <= 70) return num;
+        }
+        // Fallback: any number
+        const anyNum = str.match(/\d+/);
+        return anyNum ? 1000 + parseInt(anyNum[0]) : 9999;
+      }
+
+      function getSortedMatches() {
+        const allMatches = [...new Set(matchData.map(m => m.Match).filter(m => m))];
+        const sorted = allMatches.sort((a, b) => getMatchOrder(a) - getMatchOrder(b));
+        console.log('📋 Sorted match order:', sorted);
+        return sorted;
+      }
+
+      async function init() {
+        try {
+          const [pts, matches, season] = await Promise.all([
+            fetch(pointsURL).then(r => r.json()),
+            fetch(matchURL).then(r => r.json()),
+            fetch(seasonURL).then(r => r.json())
+          ]);
+          pointsData = pts;
+          matchData = matches;
+          seasonData = season;
+          
+          allPlayers = [...new Set(pointsData.map(p => p.Player))].sort();
+          populateDropdown();
+          
+          playerSelect.addEventListener('change', (e) => {
+            if (e.target.value) {
+              renderJourney(e.target.value);
+              renderRankJourney(e.target.value);
+            }
+          });
+          
+          if (allPlayers.length) {
+            playerSelect.value = allPlayers[0];
+            renderJourney(allPlayers[0]);
+            renderRankJourney(allPlayers[0]);
+          }
+        } catch(e) {
+          console.error(e);
+          document.querySelector('.chart-box').innerHTML = '<p class="loader">Error loading journey data</p>';
+        }
+      }
+
+      function populateDropdown() {
+        playerSelect.innerHTML = '<option value="">-- Choose a player --</option>';
+        allPlayers.forEach(p => {
+          const opt = document.createElement('option');
+          opt.value = p;
+          opt.textContent = p;
+          playerSelect.appendChild(opt);
+        });
+      }
+
+      function computeCumulativePoints(player) {
+        const playerSeason = seasonData.find(s => s.Player === player);
+        const seasonPts = playerSeason ? Number(playerSeason.SeasonPoints) || 0 : 0;
+        const sortedMatches = getSortedMatches();
+        const playerMatches = matchData.filter(m => m.Player === player);
+        
+        let cumulative = seasonPts;
+        const labels = ['Season'];
+        const dataPoints = [seasonPts];
+        
+        sortedMatches.forEach(mId => {
+          const match = playerMatches.find(m => m.Match === mId);
+          if (match) {
+            cumulative += (Number(match.WinnerPoints)||0) + (Number(match.MOTMPoints)||0);
+          }
+          labels.push(mId);
+          dataPoints.push(cumulative);
+        });
+        return { labels, dataPoints };
+      }
+
+      function computeRankTimeline(selectedPlayer) {
+        const playerList = allPlayers;
+        const sortedMatches = getSortedMatches();
+        const stages = ['Season', ...sortedMatches];
+        
+        const scoresOverTime = {};
+        playerList.forEach(p => {
+          const playerSeason = seasonData.find(s => s.Player === p);
+          const base = playerSeason ? Number(playerSeason.SeasonPoints) || 0 : 0;
+          const playerMatches = matchData.filter(m => m.Player === p);
+          let cum = base;
+          const timeline = [base];
+          sortedMatches.forEach(mId => {
+            const match = playerMatches.find(m => m.Match === mId);
+            if (match) cum += (Number(match.WinnerPoints)||0) + (Number(match.MOTMPoints)||0);
+            timeline.push(cum);
+          });
+          scoresOverTime[p] = timeline;
+        });
+
+        const rankTimeline = [];
+        for (let stageIdx = 0; stageIdx < stages.length; stageIdx++) {
+          const stageScores = playerList.map(p => ({ player: p, score: scoresOverTime[p][stageIdx] }));
+          stageScores.sort((a,b) => b.score - a.score);
+          const rankMap = {};
+          stageScores.forEach((item, idx) => { rankMap[item.player] = idx + 1; });
+          rankTimeline.push(rankMap);
+        }
+        
+        const selectedRanks = rankTimeline.map(stage => stage[selectedPlayer] || 0);
+        return { labels: stages, ranks: selectedRanks };
+      }
+
+      function getChartOptions(isRank = false) {
+        const isMobile = window.innerWidth < 768;
+        return {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { 
+              labels: { 
+                color: 'var(--text-primary)',
+                font: { size: isMobile ? 12 : 14 }
+              } 
+            },
+            tooltip: { mode: 'index' }
+          },
+          scales: {
+            y: { 
+              beginAtZero: !isRank,
+              reverse: isRank,
+              grid: { color: 'var(--border-soft)' },
+              ticks: { 
+                color: 'var(--text-secondary)',
+                stepSize: isRank ? 1 : undefined,
+                font: { size: isMobile ? 10 : 12 }
+              },
+              title: { 
+                display: true, 
+                text: isRank ? 'Rank' : 'Cumulative Points', 
+                color: 'var(--accent-secondary)',
+                font: { size: isMobile ? 11 : 13 }
+              }
+            },
+            x: { 
+              ticks: { 
+                color: 'var(--text-primary)',
+                maxRotation: isMobile ? 45 : 30,
+                minRotation: isMobile ? 45 : 0,
+                font: { size: isMobile ? 9 : 11 },
+                autoSkip: true,
+                maxTicksLimit: isMobile ? 8 : 15
+              }
+            }
+          }
+        };
+      }
+
+      function renderJourney(player) {
+        const { labels, dataPoints } = computeCumulativePoints(player);
+        if (pointsChart) pointsChart.destroy();
+        pointsChart = new Chart(ctxPoints, {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: `${player} · Total Points`,
+              data: dataPoints,
+              borderColor: 'var(--accent-primary)',
+              backgroundColor: 'rgba(192,192,192,0.1)',
+              borderWidth: 3,
+              pointBackgroundColor: 'var(--accent-secondary)',
+              pointBorderColor: '#fff',
+              pointRadius: window.innerWidth < 768 ? 3 : 5,
+              tension: 0.2,
+              fill: true
+            }]
+          },
+          options: getChartOptions(false)
+        });
+      }
+
+      function renderRankJourney(player) {
+        const { labels, ranks } = computeRankTimeline(player);
+        if (rankChart) rankChart.destroy();
+        rankChart = new Chart(ctxRank, {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: `${player} · Rank (lower is better)`,
+              data: ranks,
+              borderColor: 'var(--accent-primary)',
+              backgroundColor: 'rgba(192,192,192,0.05)',
+              borderWidth: 3,
+              pointBackgroundColor: 'var(--accent-secondary)',
+              pointBorderColor: '#fff',
+              pointRadius: window.innerWidth < 768 ? 3 : 5,
+              tension: 0.2,
+              fill: false
+            }]
+          },
+          options: getChartOptions(true)
+        });
+      }
+
+      let resizeTimeout;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+          const selected = playerSelect.value;
+          if (selected) {
+            renderJourney(selected);
+            renderRankJourney(selected);
+          }
+        }, 200);
+      });
+
+      init();
+    })();
+  </script>
+</body>
+</html>

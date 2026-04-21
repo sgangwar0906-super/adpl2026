@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <title>ADPL · Player Profiles</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@300..800&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body { background-image: url('bg.png'); background-size: cover; background-attachment: fixed; }
+    .players-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1.8rem; margin: 2rem 0; }
+    .player-card { background: var(--surface-glass); backdrop-filter: blur(16px); border-radius: 1.8rem; padding: 1.2rem; text-align: center; cursor: pointer; border: 2px solid transparent; min-height: 170px; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.2s; }
+    .player-card:hover { border-color: var(--accent-primary); background: var(--hover-bg); }
+    .player-card.active { border-color: var(--accent-primary); background: var(--hover-bg); }
+    .player-card-img { width: 95px; height: 95px; border-radius: 50%; object-fit: cover; margin-bottom: 0.8rem; border: 2px solid var(--accent-primary); background: #2a2a2a; }
+    .player-card-name { font-weight: 700; font-size: 1rem; color: var(--text-primary); }
+    .selected-player-header { display: flex; align-items: center; justify-content: space-between; gap: 1.8rem; margin-bottom: 1rem; flex-wrap: wrap; background: var(--surface-glass); backdrop-filter: blur(12px); border-radius: 2rem; padding: 1.2rem; }
+    .player-info { display: flex; align-items: center; gap: 1.5rem; }
+    .selected-photo { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 3px solid var(--accent-primary); }
+    .player-rank-badge {
+      background: var(--accent-glow);
+      padding: 0.5rem 1.5rem;
+      border-radius: 60px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--accent-secondary);
+      border: 1px solid var(--border-light);
+      white-space: nowrap;
+    }
+    .rank-points-container {
+      display: flex;
+      gap: 1rem;
+    }
+    .data-table { table-layout: fixed; width: 100%; }
+    .loader { text-align: center; padding: 2rem; color: var(--accent-secondary); }
+    @media (max-width: 640px) { 
+      .players-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 1rem; } 
+      .player-card-img { width: 75px; height: 75px; } 
+      .player-card { min-height: 150px; } 
+      .selected-player-header { flex-direction: column; align-items: flex-start; }
+      .rank-points-container { flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="logo"><span class="logo-icon">🏏</span> ADPL·2026</div>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">🏠 Leaderboard</a>
+      <a href="pp.html" class="nav-link active">👤 Player Profiles</a>
+      <a href="pw.html" class="nav-link">🏆 Previous Winners</a>
+      <a href="stats.html" class="nav-link">📊 Stats</a>
+      <a href="journey.html" class="nav-link">📈 Journey</a>
+      <a href="more.html" class="nav-link">📖 More</a>
+      <a href="rules.html" class="nav-link">📜 Rules</a>
+      <select id="themeSelector" class="theme-selector">
+        <option value="green-silver">🌿 Green-Silver</option>
+        <option value="red-gold">🔥 Red-Gold</option>
+        <option value="blue-black">💙 Blue-Black</option>
+        <option value="csk">🟡💙 CSK</option>
+        <option value="mi">🔵🟡 MI</option>
+        <option value="rcb">🔴⚫ RCB</option>
+        <option value="kkr">🟣🟡 KKR</option>
+        <option value="dc">🔵🔴 DC</option>
+        <option value="pbks">🔴⚪ PBKS</option>
+        <option value="rr">🩷🔵 RR</option>
+        <option value="srh">🟠⚫ SRH</option>
+        <option value="lsg">🔵🔴 LSG (Blue-Red)</option>
+        <option value="gt">🔵⚪ GT</option>
+      </select>
+    </div>
+  </nav>
+
+  <main class="main-container">
+    <h1 class="section-title" style="text-align:center;">👥 Select a Player</h1>
+    <div id="playersGrid" class="players-grid"><div class="loader">Loading players...</div></div>
+    
+    <div id="selectedPlayerSection" style="display: none;">
+      <div class="selected-player-header">
+        <div class="player-info">
+          <img id="selectedPhoto" class="selected-photo" src="images/default.jpg" alt="">
+          <h2 id="selectedPlayerName" class="player-name-glow" style="font-size: 1.8rem; margin:0;"></h2>
+        </div>
+        <div class="rank-points-container">
+          <span id="playerRankDisplay" class="player-rank-badge">🏆 Rank: —</span>
+          <span id="playerPointsDisplay" class="player-rank-badge">📊 Points: —</span>
+        </div>
+      </div>
+      
+      <div class="data-table-wrapper">
+        <div class="section-title-small">📊 SEASON PREDICTIONS</div>
+        <div class="table-responsive-mini">
+          <table id="seasonTable" class="data-table">
+            <thead><tr><th>Orange1</th><th>Orange2</th><th>Orange3</th><th>Purple1</th><th>Purple2</th><th>Purple3</th><th>Winner</th><th>PO1</th><th>PO2</th><th>PO3</th><th>PO4</th><th>POTT1</th><th>POTT2</th><th>POTT3</th></tr></thead>
+            <tbody><tr><td colspan="14" class="loader">Select a player</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+      
+      <div class="data-table-wrapper">
+        <div class="section-title-small">⚡ MATCH PREDICTIONS</div>
+        <div class="table-responsive-mini">
+          <table id="matchTable" class="data-table">
+            <thead><tr><th>Match</th><th>Winner Prediction</th><th>Correct</th><th>Points</th><th>MOTM Prediction</th><th>Correct</th><th>Points</th></tr></thead>
+            <tbody><tr><td colspan="7" class="loader">Select a player</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="info-note">💡 Click any player to see predictions, current rank, and total points.</div>
+  </main>
+  
+  <footer class="footer">
+    <div class="footer-content"><span>⚡ Official Partner:</span><a href="https://chat.whatsapp.com/GcFsctnWN2iB9OV8GofVut?mode=gi_t" target="_blank" class="footer-link"><img src="footer.png" alt="Join ADPL Community"></a></div>
+    <div class="footer-copyright">© ADPL 2026</div>
+  </footer>
+  
+  <script src="script.js"></script>
+  <script>
+    (function() {
+      // Self-contained logic for pp.html
+      const sheet = "14C6hEU0LomlnzIKXzy7DqvfgsAQF0vmNNnDi3BovUOk";
+      const pointsURL = `https://opensheet.elk.sh/${sheet}/points`;
+      const matchURL = `https://opensheet.elk.sh/${sheet}/matches`;
+      const seasonURL = `https://opensheet.elk.sh/${sheet}/season`;
+      
+      const photoMap = {
+        "Samarth Gangwar": "sg.png", "Divyansh Tyagi": "dt.png",
+        "Saksham Rathore": "sr.png", "Dhairya Kumar": "dk.png",
+        "Shubh Saxena": "ss.png", "Chirag Saxena": "cs.png",
+        "Akshay Pratap": "ap.png", "Amrit Johri": "aj.png",
+        "Syed Askari": "sa.png", "Hirdyansh Sahni": "hs.png"
+      };
+      const defaultPhoto = "images/default.jpg";
+      
+      let allPlayers = [];
+      let seasonData = [];
+      let matchData = [];
+      let pointsData = [];
+      let leaderboard = []; // with total points and rank
+      
+      const playersGrid = document.getElementById('playersGrid');
+      const selectedSection = document.getElementById('selectedPlayerSection');
+      const selectedName = document.getElementById('selectedPlayerName');
+      const selectedPhoto = document.getElementById('selectedPhoto');
+      const rankDisplay = document.getElementById('playerRankDisplay');
+      const pointsDisplay = document.getElementById('playerPointsDisplay');
+      const seasonTbody = document.querySelector('#seasonTable tbody');
+      const matchTbody = document.querySelector('#matchTable tbody');
+      
+      async function init() {
+        try {
+          const [pts, matches, season] = await Promise.all([
+            fetch(pointsURL).then(r => r.json()),
+            fetch(matchURL).then(r => r.json()),
+            fetch(seasonURL).then(r => r.json())
+          ]);
+          
+          pointsData = pts;
+          matchData = matches;
+          seasonData = season;
+          
+          // Build leaderboard with total points
+          pointsData.forEach(p => { 
+            p.Total = (Number(p.WinnerPts) || 0) + (Number(p.MOTMPts) || 0) + (Number(p.SeasonPts) || 0); 
+          });
+          leaderboard = [...pointsData].sort((a, b) => b.Total - a.Total);
+          
+          // Get unique players
+          allPlayers = [...new Set(pointsData.map(p => p.Player))].sort();
+          if (allPlayers.length === 0) allPlayers = Object.keys(photoMap);
+          
+          renderPlayerGrid();
+          
+          const urlPlayer = new URLSearchParams(window.location.search).get("player");
+          if (urlPlayer && allPlayers.includes(urlPlayer)) {
+            selectPlayer(urlPlayer);
+          }
+        } catch (e) {
+          console.error(e);
+          playersGrid.innerHTML = '<div class="loader">Error loading data</div>';
+        }
+      }
+      
+      function renderPlayerGrid() {
+        playersGrid.innerHTML = '';
+        allPlayers.forEach(player => {
+          const card = document.createElement('div');
+          card.className = 'player-card';
+          card.setAttribute('data-player', player);
+          
+          const img = document.createElement('img');
+          img.src = photoMap[player] || defaultPhoto;
+          img.className = 'player-card-img';
+          img.onerror = () => { img.src = defaultPhoto; };
+          
+          const nameSpan = document.createElement('div');
+          nameSpan.className = 'player-card-name';
+          nameSpan.textContent = player;
+          
+          card.appendChild(img);
+          card.appendChild(nameSpan);
+          card.addEventListener('click', () => selectPlayer(player));
+          playersGrid.appendChild(card);
+        });
+      }
+      
+      function selectPlayer(playerName) {
+        // Update active card
+        document.querySelectorAll('.player-card').forEach(card => {
+          card.classList.toggle('active', card.getAttribute('data-player') === playerName);
+        });
+        
+        // Update URL
+        const url = new URL(window.location);
+        url.searchParams.set('player', playerName);
+        window.history.pushState({}, '', url);
+        
+        // Show section
+        selectedSection.style.display = 'block';
+        
+        // Set name and photo
+        selectedName.textContent = playerName;
+        selectedPhoto.src = photoMap[playerName] || defaultPhoto;
+        selectedPhoto.onerror = () => { selectedPhoto.src = defaultPhoto; };
+        
+        // Update rank and points
+        const rankIndex = leaderboard.findIndex(p => p.Player === playerName);
+        if (rankIndex !== -1) {
+          rankDisplay.textContent = `🏆 Rank: ${rankIndex + 1}`;
+          pointsDisplay.textContent = `📊 Points: ${leaderboard[rankIndex].Total}`;
+        } else {
+          rankDisplay.textContent = '🏆 Rank: —';
+          pointsDisplay.textContent = '📊 Points: —';
+        }
+        
+        // Season predictions
+        seasonTbody.innerHTML = '';
+        const playerSeason = seasonData.find(s => s.Player === playerName);
+        if (playerSeason) {
+          const row = seasonTbody.insertRow();
+          const fields = ['Orange1','Orange2','Orange3','Purple1','Purple2','Purple3','Winner','Playoff1','Playoff2','Playoff3','Playoff4','POTT1','POTT2','POTT3'];
+          fields.forEach(f => { row.insertCell().textContent = playerSeason[f] || ''; });
+        } else {
+          seasonTbody.innerHTML = '<tr><td colspan="14">No season predictions</td></tr>';
+        }
+        
+        // Match predictions
+        matchTbody.innerHTML = '';
+        const playerMatches = matchData.filter(m => m.Player === playerName);
+        if (playerMatches.length) {
+          playerMatches.forEach(m => {
+            const row = matchTbody.insertRow();
+            row.insertCell().textContent = m.Match || '';
+            row.insertCell().textContent = m.WinnerPrediction || '';
+            row.insertCell().textContent = m.WinnerCorrect || '';
+            row.insertCell().textContent = m.WinnerPoints || '';
+            row.insertCell().textContent = m.MOTMPrediction || '';
+            row.insertCell().textContent = m.MOTMCorrect || '';
+            row.insertCell().textContent = m.MOTMPoints || '';
+          });
+        } else {
+          matchTbody.innerHTML = '<tr><td colspan="7">No match predictions</td></tr>';
+        }
+      }
+      
+      init();
+    })();
+  </script>
+</body>
+</html>
