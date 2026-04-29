@@ -58,7 +58,7 @@ if (document.getElementById("playerName") && window.location.pathname.includes("
       if (tbody) {
         tbody.innerHTML = "";
         const matches = data.filter(m => m.Player === player).sort((a,b) => getMatchNumber(a.Match) - getMatchNumber(b.Match));
-        if (!matches.length) tbody.innerHTML = "<tr><td colspan='7'>No match predictions</td></tr>";
+        if (!matches.length) tbody.innerHTML = "</table><td colspan='7'>No match predictions</td></tr>";
         else matches.forEach(m => {
           const row = tbody.insertRow();
           row.insertCell(0).innerText = m.Match || "";
@@ -76,7 +76,7 @@ if (document.getElementById("playerName") && window.location.pathname.includes("
       if (tbody) {
         tbody.innerHTML = "";
         const season = data.filter(s => s.Player === player);
-        if (!season.length) tbody.innerHTML = "<td><td colspan='14'>No season predictions</td></tr>";
+        if (!season.length) tbody.innerHTML = "<tr><td colspan='14'>No season predictions</td></tr>";
         else {
           const s = season[0];
           const row = tbody.insertRow();
@@ -91,7 +91,7 @@ if (document.getElementById("playerName") && window.location.pathname.includes("
   }
 }
 
-// ========== STATS PAGE – FIXED STREAKS USING POINTS ==========
+// ========== STATS PAGE ==========
 if (document.getElementById("winnerChart")) {
   (async function() {
     try {
@@ -104,9 +104,15 @@ if (document.getElementById("winnerChart")) {
       const matchData = matchRes;
       const allPlayers = [...new Set(pointsRes.map(p => p.Player))].sort();
 
-      // --- Compute streaks based on points earned ---
+      console.log("=== DEBUG: Sample match row ===");
+      if (matchData.length) {
+        console.log(matchData[0]);
+        console.log("WinnerPoints raw value:", matchData[0].WinnerPoints, "type:", typeof matchData[0].WinnerPoints);
+      }
+
+      // --- Compute streaks with detailed logging ---
       function computeStreaks(matches) {
-        const winnerStreaks = {}, motmStreaks = {};
+        const winnerStreaks = {}, motmStreaks = {}, winnerLosingStreaks = {};
         const playerMatches = {};
         matches.forEach(m => {
           if (!playerMatches[m.Player]) playerMatches[m.Player] = [];
@@ -116,13 +122,16 @@ if (document.getElementById("winnerChart")) {
           playerMatches[player].sort((a,b) => getMatchNumber(a.Match) - getMatchNumber(b.Match));
           let currWinnerStreak = 0, maxWinnerStreak = 0;
           let currMotmStreak = 0, maxMotmStreak = 0;
-          console.log(`\n--- ${player} (WinnerPoints ≥2 & MOTMPoints ≥5) ---`);
+          let currWinnerLosing = 0, maxWinnerLosing = 0;
+          console.log(`\n--- ${player} ---`);
           for (let m of playerMatches[player]) {
-            const winnerPoints = parseFloat(m.WinnerPoints) || 0;
-            const motmPoints = parseFloat(m.MOTMPoints) || 0;
-            const winnerOk = winnerPoints >= 2;
-            const motmOk = motmPoints >= 5;
-            console.log(`Match ${m.Match}: WinnerPoints=${winnerPoints} (${winnerOk}), MOTMPoints=${motmPoints} (${motmOk})`);
+            const winnerPoints = parseFloat(m.WinnerPoints);
+            const motmPoints = parseFloat(m.MOTMPoints);
+            // Handle NaN (if empty or non-numeric)
+            const winnerOk = !isNaN(winnerPoints) && winnerPoints >= 2;
+            const motmOk = !isNaN(motmPoints) && motmPoints >= 5;
+            const winnerZero = !isNaN(winnerPoints) && winnerPoints === 0;
+            console.log(`Match ${m.Match}: WinnerPoints=${m.WinnerPoints} (parsed=${winnerPoints}) -> ok=${winnerOk}, zero=${winnerZero}; MOTMPoints=${m.MOTMPoints} -> ok=${motmOk}`);
             if (winnerOk) {
               currWinnerStreak++;
               maxWinnerStreak = Math.max(maxWinnerStreak, currWinnerStreak);
@@ -135,29 +144,48 @@ if (document.getElementById("winnerChart")) {
             } else {
               currMotmStreak = 0;
             }
+            if (winnerZero) {
+              currWinnerLosing++;
+              maxWinnerLosing = Math.max(maxWinnerLosing, currWinnerLosing);
+            } else {
+              currWinnerLosing = 0;
+            }
           }
-          console.log(`Winner streak: ${maxWinnerStreak}, MOTM streak: ${maxMotmStreak}`);
+          console.log(`Winner streak: ${maxWinnerStreak}, MOTM streak: ${maxMotmStreak}, Winner losing streak (zeroes): ${maxWinnerLosing}`);
           winnerStreaks[player] = maxWinnerStreak;
           motmStreaks[player] = maxMotmStreak;
+          winnerLosingStreaks[player] = maxWinnerLosing;
         }
-        return { winnerStreaks, motmStreaks };
+        return { winnerStreaks, motmStreaks, winnerLosingStreaks };
       }
 
-      const { winnerStreaks, motmStreaks } = computeStreaks(matchData);
+      const { winnerStreaks, motmStreaks, winnerLosingStreaks } = computeStreaks(matchData);
       const topWinnerStreaks = Object.entries(winnerStreaks).sort((a,b)=>b[1]-a[1]).slice(0,3);
       const topMotmStreaks = Object.entries(motmStreaks).sort((a,b)=>b[1]-a[1]).slice(0,3);
-      
+      const topWinnerLosingStreaks = Object.entries(winnerLosingStreaks).sort((a,b)=>b[1]-a[1]).slice(0,3);
+
+      console.log("\n=== Top Winner Streaks ===", topWinnerStreaks);
+      console.log("=== Top MOTM Streaks ===", topMotmStreaks);
+      console.log("=== Top Winner Losing Streaks (zeroes) ===", topWinnerLosingStreaks);
+
       const winnerStreakDiv = document.getElementById("winnerStreakList");
       const motmStreakDiv = document.getElementById("motmStreakList");
+      const winnerLosingDiv = document.getElementById("winnerLosingStreakList");
+
       if (winnerStreakDiv) {
         winnerStreakDiv.innerHTML = topWinnerStreaks.length ?
           `<ul class="streak-list">${topWinnerStreaks.map(([p,s])=>`<li><span>${p}</span><span class="streak-count">${s} match${s!==1?'es':''}</span></li>`).join('')}</ul>` :
-          "<p>No data (check console)</p>";
+          "<p>No data</p>";
       }
       if (motmStreakDiv) {
         motmStreakDiv.innerHTML = topMotmStreaks.length ?
           `<ul class="streak-list">${topMotmStreaks.map(([p,s])=>`<li><span>${p}</span><span class="streak-count">${s} match${s!==1?'es':''}</span></li>`).join('')}</ul>` :
-          "<p>No data (check console)</p>";
+          "<p>No data</p>";
+      }
+      if (winnerLosingDiv) {
+        winnerLosingDiv.innerHTML = topWinnerLosingStreaks.length ?
+          `<ul class="streak-list">${topWinnerLosingStreaks.map(([p,s])=>`<li><span>${p}</span><span class="streak-count">${s} match${s!==1?'es':''}</span></li>`).join('')}</ul>` :
+          "<p>No data</p>";
       }
 
       // ---- All charts (unchanged) ----
@@ -210,7 +238,7 @@ if (document.getElementById("winnerChart")) {
       matchData.forEach(r=>{ if(r.MOTMPrediction) motmCounts[r.MOTMPrediction] = (motmCounts[r.MOTMPrediction]||0)+1; });
       renderChart('motmChart', motmCounts, 'MOTM predictions', 10);
 
-      // Individual selector (unchanged)
+      // Individual selector
       const select = document.getElementById('playerStatsSelect');
       const individualDiv = document.getElementById('individualStatsDisplay');
       if (select && individualDiv) {
