@@ -31,6 +31,47 @@
       display: flex;
       gap: 1rem;
     }
+    /* Stats Card Styles */
+    .stats-card {
+      background: linear-gradient(135deg, rgba(0,0,0,0.5), rgba(20,25,45,0.7));
+      backdrop-filter: blur(12px);
+      border-radius: 1.5rem;
+      padding: 1rem 1.5rem;
+      margin: 1.5rem 0 2rem;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      border: 1px solid rgba(255,215,0,0.3);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    }
+    .stat-item {
+      text-align: center;
+      flex: 1;
+      min-width: 100px;
+    }
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 800;
+      background: linear-gradient(145deg, #FFD966, #FFA500);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      line-height: 1.2;
+    }
+    .stat-label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+    .stat-sub {
+      font-size: 0.7rem;
+      color: #aaa;
+      margin-top: 4px;
+    }
     .data-table { table-layout: fixed; width: 100%; }
     .loader { text-align: center; padding: 2rem; color: var(--accent-secondary); }
     @media (max-width: 640px) { 
@@ -39,6 +80,9 @@
       .player-card { min-height: 150px; } 
       .selected-player-header { flex-direction: column; align-items: flex-start; }
       .rank-points-container { flex-wrap: wrap; }
+      .stats-card { flex-direction: column; align-items: stretch; text-align: center; }
+      .stat-item { min-width: auto; }
+      .stat-value { font-size: 1.6rem; }
     }
   </style>
 </head>
@@ -70,7 +114,6 @@
       </select>
     </div>
   </nav>
-
   <main class="main-container">
     <h1 class="section-title" style="text-align:center;">👥 Select a Player</h1>
     <div id="playersGrid" class="players-grid"><div class="loader">Loading players...</div></div>
@@ -87,13 +130,33 @@
         </div>
       </div>
       
+      <!-- STATS CARD: correct picks out of completed matches (numerator from leaderboard points) -->
+      <div class="stats-card">
+        <div class="stat-item">
+          <div class="stat-value" id="correctWinsOutOf">—</div>
+          <div class="stat-label">✅ Correct Winners</div>
+          <div class="stat-sub" id="winSubText">out of — matches</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="correctMotmsOutOf">—</div>
+          <div class="stat-label">🎯 Correct MOTM</div>
+          <div class="stat-sub" id="motmSubText">out of — matches</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="totalCorrectPicks">—</div>
+          <div class="stat-label">🏅 Total Correct Picks</div>
+          <div class="stat-sub">wins + MOTM</div>
+        </div>
+      </div>
+      
       <div class="data-table-wrapper">
         <div class="section-title-small">📊 SEASON PREDICTIONS</div>
         <div class="table-responsive-mini">
           <table id="seasonTable" class="data-table">
             <thead><tr><th>Orange1</th><th>Orange2</th><th>Orange3</th><th>Purple1</th><th>Purple2</th><th>Purple3</th><th>Winner</th><th>PO1</th><th>PO2</th><th>PO3</th><th>PO4</th><th>POTT1</th><th>POTT2</th><th>POTT3</th></tr></thead>
-            <tbody><tr><td colspan="14" class="loader">Select a player</td></tr></tbody>
-          </table>
+            <tbody><tr><td colspan="14" class="loader">Select a player</td></tr>
+            </tbody>
+           </table>
         </div>
       </div>
       
@@ -101,13 +164,14 @@
         <div class="section-title-small">⚡ MATCH PREDICTIONS</div>
         <div class="table-responsive-mini">
           <table id="matchTable" class="data-table">
-            <thead><tr><th>Match</th><th>Winner Prediction</th><th>Correct</th><th>Points</th><th>MOTM Prediction</th><th>Correct</th><th>Points</th></tr></thead>
-            <tbody><tr><td colspan="7" class="loader">Select a player</td></tr></tbody>
-          </table>
+            <thead><th>Match</th><th>Winner Prediction</th><th>Correct</th><th>Points</th><th>MOTM Prediction</th><th>Correct</th><th>Points</th> </thead>
+            <tbody><tr><td colspan="7" class="loader">Select a player</td></tr>
+            </tbody>
+           </table>
         </div>
       </div>
     </div>
-    <div class="info-note">💡 Click any player to see predictions, current rank, and total points.</div>
+    <div class="info-note">💡 Click any player to see predictions, rank, total points & correct picks out of completed matches (correct counts from leaderboard points).</div>
   </main>
   
   <footer class="footer">
@@ -118,7 +182,6 @@
   <script src="script.js"></script>
   <script>
     (function() {
-      // Self-contained logic for pp.html
       const sheet = "14C6hEU0LomlnzIKXzy7DqvfgsAQF0vmNNnDi3BovUOk";
       const pointsURL = `https://opensheet.elk.sh/${sheet}/points`;
       const matchURL = `https://opensheet.elk.sh/${sheet}/matches`;
@@ -137,7 +200,7 @@
       let seasonData = [];
       let matchData = [];
       let pointsData = [];
-      let leaderboard = []; // with total points and rank
+      let leaderboard = [];
       
       const playersGrid = document.getElementById('playersGrid');
       const selectedSection = document.getElementById('selectedPlayerSection');
@@ -147,6 +210,27 @@
       const pointsDisplay = document.getElementById('playerPointsDisplay');
       const seasonTbody = document.querySelector('#seasonTable tbody');
       const matchTbody = document.querySelector('#matchTable tbody');
+      
+      // Stats card elements
+      const correctWinsSpan = document.getElementById('correctWinsOutOf');
+      const winSubTextSpan = document.getElementById('winSubText');
+      const correctMotmsSpan = document.getElementById('correctMotmsOutOf');
+      const motmSubTextSpan = document.getElementById('motmSubText');
+      const totalCorrectSpan = document.getElementById('totalCorrectPicks');
+      
+      // Helper: count completed matches and total possible for winner/MOTM
+      function getCompletedCounts(playerName) {
+        const playerMatches = matchData.filter(m => m.Player === playerName);
+        let completedWins = 0;
+        let completedMotms = 0;
+        for (let m of playerMatches) {
+          const winnerCorr = m.WinnerCorrect ? m.WinnerCorrect.toString().trim() : '';
+          const motmCorr = m.MOTMCorrect ? m.MOTMCorrect.toString().trim() : '';
+          if (winnerCorr !== '') completedWins++;
+          if (motmCorr !== '') completedMotms++;
+        }
+        return { completedWins, completedMotms };
+      }
       
       async function init() {
         try {
@@ -160,13 +244,11 @@
           matchData = matches;
           seasonData = season;
           
-          // Build leaderboard with total points
           pointsData.forEach(p => { 
             p.Total = (Number(p.WinnerPts) || 0) + (Number(p.MOTMPts) || 0) + (Number(p.SeasonPts) || 0); 
           });
           leaderboard = [...pointsData].sort((a, b) => b.Total - a.Total);
           
-          // Get unique players
           allPlayers = [...new Set(pointsData.map(p => p.Player))].sort();
           if (allPlayers.length === 0) allPlayers = Object.keys(photoMap);
           
@@ -206,33 +288,41 @@
       }
       
       function selectPlayer(playerName) {
-        // Update active card
         document.querySelectorAll('.player-card').forEach(card => {
           card.classList.toggle('active', card.getAttribute('data-player') === playerName);
         });
         
-        // Update URL
         const url = new URL(window.location);
         url.searchParams.set('player', playerName);
         window.history.pushState({}, '', url);
         
-        // Show section
         selectedSection.style.display = 'block';
-        
-        // Set name and photo
         selectedName.textContent = playerName;
         selectedPhoto.src = photoMap[playerName] || defaultPhoto;
         selectedPhoto.onerror = () => { selectedPhoto.src = defaultPhoto; };
         
-        // Update rank and points
         const rankIndex = leaderboard.findIndex(p => p.Player === playerName);
+        let correctWins = 0, correctMotms = 0;
         if (rankIndex !== -1) {
           rankDisplay.textContent = `🏆 Rank: ${rankIndex + 1}`;
           pointsDisplay.textContent = `📊 Points: ${leaderboard[rankIndex].Total}`;
+          // Correct counts from leaderboard points
+          correctWins = Math.floor((leaderboard[rankIndex].WinnerPts || 0) / 2);
+          correctMotms = Math.floor((leaderboard[rankIndex].MOTMPts || 0) / 5);
         } else {
           rankDisplay.textContent = '🏆 Rank: —';
           pointsDisplay.textContent = '📊 Points: —';
         }
+        
+        // Get completed matches counts from matchData
+        const { completedWins, completedMotms } = getCompletedCounts(playerName);
+        
+        // Display "X / Y" format
+        correctWinsSpan.innerText = `${correctWins} / ${completedWins}`;
+        winSubTextSpan.innerText = `out of ${completedWins} matches`;
+        correctMotmsSpan.innerText = `${correctMotms} / ${completedMotms}`;
+        motmSubTextSpan.innerText = `out of ${completedMotms} matches`;
+        totalCorrectSpan.innerText = correctWins + correctMotms;
         
         // Season predictions
         seasonTbody.innerHTML = '';
