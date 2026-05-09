@@ -130,15 +130,15 @@
         </div>
       </div>
       
-      <!-- STATS CARD: correct picks out of completed matches (numerator from leaderboard points) -->
+      <!-- STATS CARD: correct predictions with "out of X matches" subtext -->
       <div class="stats-card">
         <div class="stat-item">
-          <div class="stat-value" id="correctWinsOutOf">—</div>
+          <div class="stat-value" id="correctWinsCount">—</div>
           <div class="stat-label">✅ Correct Winners</div>
           <div class="stat-sub" id="winSubText">out of — matches</div>
         </div>
         <div class="stat-item">
-          <div class="stat-value" id="correctMotmsOutOf">—</div>
+          <div class="stat-value" id="correctMotmsCount">—</div>
           <div class="stat-label">🎯 Correct MOTM</div>
           <div class="stat-sub" id="motmSubText">out of — matches</div>
         </div>
@@ -156,7 +156,7 @@
             <thead><tr><th>Orange1</th><th>Orange2</th><th>Orange3</th><th>Purple1</th><th>Purple2</th><th>Purple3</th><th>Winner</th><th>PO1</th><th>PO2</th><th>PO3</th><th>PO4</th><th>POTT1</th><th>POTT2</th><th>POTT3</th></tr></thead>
             <tbody><tr><td colspan="14" class="loader">Select a player</td></tr>
             </tbody>
-           </table>
+          </table>
         </div>
       </div>
       
@@ -164,14 +164,14 @@
         <div class="section-title-small">⚡ MATCH PREDICTIONS</div>
         <div class="table-responsive-mini">
           <table id="matchTable" class="data-table">
-            <thead><th>Match</th><th>Winner Prediction</th><th>Correct</th><th>Points</th><th>MOTM Prediction</th><th>Correct</th><th>Points</th> </thead>
+            <thead><tr><th>Match</th><th>Winner Prediction</th><th>Correct</th><th>Points</th><th>MOTM Prediction</th><th>Correct</th><th>Points</th> </thead>
             <tbody><tr><td colspan="7" class="loader">Select a player</td></tr>
             </tbody>
-           </table>
+          </table>
         </div>
       </div>
     </div>
-    <div class="info-note">💡 Click any player to see predictions, rank, total points & correct picks out of completed matches (correct counts from leaderboard points).</div>
+    <div class="info-note">💡 Click any player to see predictions, rank, total points & correct picks (out of completed matches).</div>
   </main>
   
   <footer class="footer">
@@ -211,14 +211,14 @@
       const seasonTbody = document.querySelector('#seasonTable tbody');
       const matchTbody = document.querySelector('#matchTable tbody');
       
-      // Stats card elements
-      const correctWinsSpan = document.getElementById('correctWinsOutOf');
+      // Stats card elements (with subtext)
+      const correctWinsSpan = document.getElementById('correctWinsCount');
       const winSubTextSpan = document.getElementById('winSubText');
-      const correctMotmsSpan = document.getElementById('correctMotmsOutOf');
+      const correctMotmsSpan = document.getElementById('correctMotmsCount');
       const motmSubTextSpan = document.getElementById('motmSubText');
       const totalCorrectSpan = document.getElementById('totalCorrectPicks');
       
-      // Helper: count completed matches and total possible for winner/MOTM
+      // Helper: count completed matches for winner and MOTM for a player
       function getCompletedCounts(playerName) {
         const playerMatches = matchData.filter(m => m.Player === playerName);
         let completedWins = 0;
@@ -306,7 +306,6 @@
         if (rankIndex !== -1) {
           rankDisplay.textContent = `🏆 Rank: ${rankIndex + 1}`;
           pointsDisplay.textContent = `📊 Points: ${leaderboard[rankIndex].Total}`;
-          // Correct counts from leaderboard points
           correctWins = Math.floor((leaderboard[rankIndex].WinnerPts || 0) / 2);
           correctMotms = Math.floor((leaderboard[rankIndex].MOTMPts || 0) / 5);
         } else {
@@ -314,13 +313,13 @@
           pointsDisplay.textContent = '📊 Points: —';
         }
         
-        // Get completed matches counts from matchData
+        // Get total completed matches from matchData
         const { completedWins, completedMotms } = getCompletedCounts(playerName);
         
-        // Display "X / Y" format
-        correctWinsSpan.innerText = `${correctWins} / ${completedWins}`;
+        // Display numbers and "out of X" subtext
+        correctWinsSpan.innerText = correctWins;
         winSubTextSpan.innerText = `out of ${completedWins} matches`;
-        correctMotmsSpan.innerText = `${correctMotms} / ${completedMotms}`;
+        correctMotmsSpan.innerText = correctMotms;
         motmSubTextSpan.innerText = `out of ${completedMotms} matches`;
         totalCorrectSpan.innerText = correctWins + correctMotms;
         
