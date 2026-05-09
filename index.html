@@ -190,16 +190,19 @@
   </footer>
 
   <script>
-    // ======================== ENHANCED LEADERBOARD WITH HISTORICAL SELECTOR ========================
+    // ======================== FIXED LEADERBOARD WITH HISTORICAL SELECTOR ========================
+    // This script completely replaces the leaderboard functionality.
+    // It uses official totals from 'points' sheet for final standings,
+    // and match-by-match accumulation for historical views.
     (function() {
       const sheetId = "14C6hEU0LomlnzIKXzy7DqvfgsAQF0vmNNnDi3BovUOk";
       const pointsURL = `https://opensheet.elk.sh/${sheetId}/points`;
       const matchURL = `https://opensheet.elk.sh/${sheetId}/matches`;
       
-      let pointsData = [];
-      let matchData = [];
+      let pointsData = [];      // official final totals per player
+      let matchData = [];       // per-match predictions
       let allPlayers = [];
-      let seasonPointsMap = {};    // player -> SeasonPts (constant)
+      let officialTotals = {};  // player -> { winner, motm, season, total }
       let uniqueMatchNumbers = [];
       
       const tbody = document.querySelector("#leaderboard tbody");
@@ -214,11 +217,27 @@
         return match ? parseInt(match[0]) : 999;
       }
       
-      // Compute cumulative totals up to a specific match (or "latest" = all matches)
-      function computeCumulativeLeaderboard(matchLimit) {
+      // Build official final leaderboard from points sheet (most accurate)
+      function getOfficialLeaderboard() {
+        const board = [];
+        for (let player of allPlayers) {
+          const data = officialTotals[player] || { winner: 0, motm: 0, season: 0, total: 0 };
+          board.push({
+            player: player,
+            winner: data.winner,
+            motm: data.motm,
+            season: data.season,
+            total: data.total
+          });
+        }
+        return board.sort((a,b) => b.total - a.total);
+      }
+      
+      // Compute cumulative totals from matches up to a specific match number
+      function computeHistoricalLeaderboard(matchLimit) {
         let winnerAcc = {}, motmAcc = {};
         let filteredMatches = matchData;
-        if (matchLimit !== "latest" && typeof matchLimit === "number") {
+        if (typeof matchLimit === "number" && !isNaN(matchLimit)) {
           filteredMatches = matchData.filter(m => getMatchNumber(m.Match) <= matchLimit);
         }
         for (let m of filteredMatches) {
@@ -231,17 +250,20 @@
         for (let player of allPlayers) {
           const winner = winnerAcc[player] || 0;
           const motm = motmAcc[player] || 0;
-          const season = seasonPointsMap[player] || 0;
+          const season = officialTotals[player]?.season || 0;
           const total = winner + motm + season;
           board.push({ player, winner, motm, season, total });
         }
         return board.sort((a,b) => b.total - a.total);
       }
       
-      // Render table with top-3 highlight classes
       function renderLeaderboard(leaderboardArray) {
         if (!tbody) return;
         tbody.innerHTML = "";
+        if (!leaderboardArray.length) {
+          tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No data available</td></tr>';
+          return;
+        }
         leaderboardArray.forEach((entry, idx) => {
           const rank = idx + 1;
           const row = tbody.insertRow();
@@ -249,11 +271,9 @@
           else if (rank === 2) row.classList.add("top-2");
           else if (rank === 3) row.classList.add("top-3");
           
-          // Rank cell with badge
           const rankCell = row.insertCell(0);
           rankCell.innerHTML = `<span class="rank-badge">${rank}</span>`;
           
-          // Player name as clickable link
           const nameCell = row.insertCell(1);
           const link = document.createElement("a");
           link.href = `pp.html?player=${encodeURIComponent(entry.player)}`;
@@ -266,9 +286,6 @@
           row.insertCell(4).innerText = Math.round(entry.season);
           row.insertCell(5).innerText = Math.round(entry.total);
         });
-        if (leaderboardArray.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No data available</td></tr>';
-        }
       }
       
       async function populateMatchSelector() {
@@ -293,12 +310,12 @@
         const selected = matchSelector.value;
         let leaderboardData;
         if (selected === "latest") {
-          leaderboardData = computeCumulativeLeaderboard("latest");
+          leaderboardData = getOfficialLeaderboard();
           viewLabel.innerHTML = "🏆 Current Standings (Final)";
           localStorage.removeItem("adpl_selected_match_index");
         } else {
           const matchNum = parseInt(selected, 10);
-          leaderboardData = computeCumulativeLeaderboard(matchNum);
+          leaderboardData = computeHistoricalLeaderboard(matchNum);
           viewLabel.innerHTML = `📊 Standings after Match ${matchNum}`;
           localStorage.setItem("adpl_selected_match_index", selected);
         }
@@ -314,25 +331,29 @@
           pointsData = pointsRes;
           matchData = matchesRes;
           
-          // Build season points map and player list
+          // Build official totals and player list from points sheet
+          const playerSet = new Set();
           pointsData.forEach(p => {
             const player = p.Player;
-            if (player) {
-              seasonPointsMap[player] = parseFloat(p.SeasonPts) || 0;
-              if (!allPlayers.includes(player)) allPlayers.push(player);
-            }
+            if (!player) return;
+            playerSet.add(player);
+            const winner = parseFloat(p.WinnerPts) || 0;
+            const motm = parseFloat(p.MOTMPts) || 0;
+            const season = parseFloat(p.SeasonPts) || 0;
+            const total = winner + motm + season;
+            officialTotals[player] = { winner, motm, season, total };
           });
-          // Ensure players from matchData are included
+          // Also include players from matches (in case they're missing in points)
           matchData.forEach(m => {
             const player = m.Player;
-            if (player && !allPlayers.includes(player)) {
-              allPlayers.push(player);
-              if (!seasonPointsMap[player]) seasonPointsMap[player] = 0;
+            if (player && !playerSet.has(player)) {
+              playerSet.add(player);
+              officialTotals[player] = { winner: 0, motm: 0, season: 0, total: 0 };
             }
           });
-          allPlayers.sort();
+          allPlayers = Array.from(playerSet).sort();
           
-          // Extract unique match numbers from matchData (where WinnerPoints or MOTMPoints exist)
+          // Extract unique match numbers from matchData
           const matchNumbersSet = new Set();
           matchData.forEach(m => {
             const mn = getMatchNumber(m.Match);
@@ -342,19 +363,18 @@
           
           await populateMatchSelector();
           matchSelector.addEventListener("change", onMatchChange);
-          // Initial render (latest)
-          const initialLeaderboard = computeCumulativeLeaderboard("latest");
-          renderLeaderboard(initialLeaderboard);
+          // Initial render (official final standings)
+          renderLeaderboard(getOfficialLeaderboard());
         } catch (err) {
           console.error("Leaderboard init error:", err);
-          if (tbody) tbody.innerHTML = '<tr><td colspan="6">⚠️ Failed to load data. Check sheet access.</td></tr>';
+          if (tbody) tbody.innerHTML = '<tr><td colspan="6">⚠️ Failed to load data. Check network or sheet permissions.</td></tr>';
         }
       }
       
       init();
     })();
     
-    // ========== THEME SELECTOR (keep existing) ==========
+    // ========== THEME SELECTOR ==========
     (function() {
       const sel = document.getElementById('themeSelector');
       if (!sel) return;
@@ -367,18 +387,37 @@
       });
     })();
   </script>
-  <!-- The external script.js is still loaded but we override its leaderboard fetch to avoid conflict -->
-  <script src="script.js"></script>
+  <!-- script.js is still loaded but contains a leaderboard block that would overwrite our table.
+       We disable it by overriding the leaderboard element check. -->
   <script>
-    // Prevent script.js from overwriting our enhanced leaderboard
-    // (script.js contains a leaderboard block that would replace our table)
-    // We simply let it execute, but since we already rendered, we force a re-render after a short delay.
+    // Override the leaderboard check in script.js to prevent it from running
+    // This ensures our enhanced table stays intact.
+    Object.defineProperty(document, 'getElementById', {
+      value: function(id) {
+        if (id === 'leaderboard' && window._leaderboardOverridden) {
+          return null;
+        }
+        return originalGetElementById.call(document, id);
+      },
+      configurable: true
+    });
+    const originalGetElementById = document.getElementById;
+    window._leaderboardOverridden = true;
+    // Allow our own script to still access leaderboard, but script.js's check will fail
+    // Then restore after a short delay to not break other functionality
+    setTimeout(() => {
+      window._leaderboardOverridden = false;
+    }, 500);
+  </script>
+  <script src="script.js"></script>
+  <!-- Final safety: re-trigger change to ensure correct render -->
+  <script>
     setTimeout(() => {
       const selector = document.getElementById('matchSelector');
       if (selector && selector.value !== undefined) {
         selector.dispatchEvent(new Event('change'));
       }
-    }, 200);
+    }, 300);
   </script>
 </body>
 </html>
