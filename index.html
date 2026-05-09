@@ -8,7 +8,118 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@300..800&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <style>
-    /* inline for quick override if needed */
+    /* Additional styles for enhanced leaderboard */
+    .selector-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      background: var(--surface-glass);
+      backdrop-filter: blur(12px);
+      border-radius: 60px;
+      padding: 0.6rem 1.5rem;
+      margin-bottom: 2rem;
+      border: 1px solid rgba(255,215,0,0.3);
+    }
+    .current-badge {
+      font-weight: 700;
+      background: var(--accent-glow);
+      padding: 0.4rem 1.2rem;
+      border-radius: 60px;
+      font-size: 0.9rem;
+    }
+    .date-selector {
+      background: rgba(0,0,0,0.5);
+      border: 1px solid var(--accent-primary);
+      border-radius: 40px;
+      padding: 0.5rem 1.2rem;
+      color: var(--text-primary);
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .leaderboard-wrapper {
+      background: var(--surface-glass);
+      backdrop-filter: blur(8px);
+      border-radius: 2rem;
+      padding: 1.8rem;
+      margin: 1rem 0;
+    }
+    .table-responsive {
+      overflow-x: auto;
+    }
+    #leaderboard {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0 12px;
+    }
+    #leaderboard thead th {
+      font-size: 0.9rem;
+      font-weight: 700;
+      padding: 1rem 0.8rem;
+      background: rgba(0,0,0,0.3);
+      border-radius: 1rem;
+      color: var(--accent-secondary);
+      text-transform: uppercase;
+    }
+    #leaderboard tbody tr {
+      background: var(--card-bg);
+      border-radius: 1rem;
+      transition: 0.2s;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    #leaderboard tbody tr:hover {
+      transform: scale(1.01);
+      background: var(--hover-bg);
+    }
+    #leaderboard td {
+      padding: 1rem 0.8rem;
+      font-size: 1rem;
+      font-weight: 500;
+      text-align: center;
+    }
+    /* Top 3 row highlights */
+    #leaderboard tbody tr.top-1 {
+      background: linear-gradient(90deg, rgba(255,215,0,0.25), rgba(255,215,0,0.05));
+      border-left: 5px solid #FFD700;
+    }
+    #leaderboard tbody tr.top-2 {
+      background: linear-gradient(90deg, rgba(192,192,192,0.2), rgba(192,192,192,0.05));
+      border-left: 5px solid #C0C0C0;
+    }
+    #leaderboard tbody tr.top-3 {
+      background: linear-gradient(90deg, rgba(205,127,50,0.2), rgba(205,127,50,0.05));
+      border-left: 5px solid #CD7F32;
+    }
+    .rank-badge {
+      display: inline-block;
+      width: 32px;
+      height: 32px;
+      line-height: 32px;
+      border-radius: 50%;
+      font-weight: 800;
+      background: rgba(255,255,255,0.1);
+    }
+    tr.top-1 .rank-badge {
+      background: #FFD700;
+      color: #1e1f2a;
+    }
+    tr.top-2 .rank-badge {
+      background: #C0C0C0;
+      color: #1e1f2a;
+    }
+    tr.top-3 .rank-badge {
+      background: #CD7F32;
+      color: #1e1f2a;
+    }
+    #leaderboard td:first-child {
+      font-weight: 800;
+    }
+    #leaderboard td:last-child {
+      font-weight: 800;
+      font-size: 1.2rem;
+      color: var(--accent-primary);
+    }
   </style>
 </head>
 <body>
@@ -41,7 +152,14 @@
   </nav>
 
   <main class="main-container">
-      
+    <!-- Historical selector bar -->
+    <div class="selector-bar">
+      <div class="current-badge" id="viewModeLabel">🏆 Current Standings (Final)</div>
+      <select id="matchSelector" class="date-selector">
+        <option value="latest">🏆 Current (after all matches)</option>
+      </select>
+    </div>
+
     <div class="stats-panel">
       <div class="live-badge-enhanced"><span class="pulse-dot"></span> LIVE · UPDATED POST MATCH</div>
     </div>
@@ -64,8 +182,6 @@
       <a href="https://www.iplt20.com/points-table/2026" target="_blank" class="ipl-card"><span class="card-emoji">🏆</span><h2>IPL POINTS TABLE</h2></a>
       <a href="https://www.iplt20.com/stats/2026" target="_blank" class="ipl-card"><span class="card-emoji">🏏</span><h2>CAPS LEADERBOARD</h2></a>
     </div>
-    
-   
   </main>
   
   <footer class="footer">
@@ -73,6 +189,196 @@
     <div class="footer-copyright">© ADPL 2026</div>
   </footer>
 
+  <script>
+    // ======================== ENHANCED LEADERBOARD WITH HISTORICAL SELECTOR ========================
+    (function() {
+      const sheetId = "14C6hEU0LomlnzIKXzy7DqvfgsAQF0vmNNnDi3BovUOk";
+      const pointsURL = `https://opensheet.elk.sh/${sheetId}/points`;
+      const matchURL = `https://opensheet.elk.sh/${sheetId}/matches`;
+      
+      let pointsData = [];
+      let matchData = [];
+      let allPlayers = [];
+      let seasonPointsMap = {};    // player -> SeasonPts (constant)
+      let uniqueMatchNumbers = [];
+      
+      const tbody = document.querySelector("#leaderboard tbody");
+      const matchSelector = document.getElementById("matchSelector");
+      const viewLabel = document.getElementById("viewModeLabel");
+      
+      function getMatchNumber(matchStr) {
+        if (!matchStr) return 999;
+        const num = parseInt(matchStr);
+        if (!isNaN(num)) return num;
+        const match = matchStr.match(/\d+/);
+        return match ? parseInt(match[0]) : 999;
+      }
+      
+      // Compute cumulative totals up to a specific match (or "latest" = all matches)
+      function computeCumulativeLeaderboard(matchLimit) {
+        let winnerAcc = {}, motmAcc = {};
+        let filteredMatches = matchData;
+        if (matchLimit !== "latest" && typeof matchLimit === "number") {
+          filteredMatches = matchData.filter(m => getMatchNumber(m.Match) <= matchLimit);
+        }
+        for (let m of filteredMatches) {
+          const player = m.Player;
+          if (!player) continue;
+          winnerAcc[player] = (winnerAcc[player] || 0) + (parseFloat(m.WinnerPoints) || 0);
+          motmAcc[player] = (motmAcc[player] || 0) + (parseFloat(m.MOTMPoints) || 0);
+        }
+        const board = [];
+        for (let player of allPlayers) {
+          const winner = winnerAcc[player] || 0;
+          const motm = motmAcc[player] || 0;
+          const season = seasonPointsMap[player] || 0;
+          const total = winner + motm + season;
+          board.push({ player, winner, motm, season, total });
+        }
+        return board.sort((a,b) => b.total - a.total);
+      }
+      
+      // Render table with top-3 highlight classes
+      function renderLeaderboard(leaderboardArray) {
+        if (!tbody) return;
+        tbody.innerHTML = "";
+        leaderboardArray.forEach((entry, idx) => {
+          const rank = idx + 1;
+          const row = tbody.insertRow();
+          if (rank === 1) row.classList.add("top-1");
+          else if (rank === 2) row.classList.add("top-2");
+          else if (rank === 3) row.classList.add("top-3");
+          
+          // Rank cell with badge
+          const rankCell = row.insertCell(0);
+          rankCell.innerHTML = `<span class="rank-badge">${rank}</span>`;
+          
+          // Player name as clickable link
+          const nameCell = row.insertCell(1);
+          const link = document.createElement("a");
+          link.href = `pp.html?player=${encodeURIComponent(entry.player)}`;
+          link.textContent = entry.player;
+          link.style.cssText = "color:inherit; text-decoration:none; border-bottom:1px dotted var(--accent-primary);";
+          nameCell.appendChild(link);
+          
+          row.insertCell(2).innerText = Math.round(entry.winner);
+          row.insertCell(3).innerText = Math.round(entry.motm);
+          row.insertCell(4).innerText = Math.round(entry.season);
+          row.insertCell(5).innerText = Math.round(entry.total);
+        });
+        if (leaderboardArray.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No data available</td></tr>';
+        }
+      }
+      
+      async function populateMatchSelector() {
+        if (!matchSelector) return;
+        matchSelector.innerHTML = '<option value="latest">🏆 Current (after all matches)</option>';
+        if (!uniqueMatchNumbers.length) return;
+        uniqueMatchNumbers.sort((a,b) => a - b).forEach(matchNum => {
+          const option = document.createElement("option");
+          option.value = matchNum;
+          option.textContent = `📅 After Match ${matchNum}`;
+          matchSelector.appendChild(option);
+        });
+        const savedMatch = localStorage.getItem("adpl_selected_match_index");
+        if (savedMatch && matchSelector.querySelector(`option[value="${savedMatch}"]`)) {
+          matchSelector.value = savedMatch;
+        } else {
+          matchSelector.value = "latest";
+        }
+      }
+      
+      async function onMatchChange() {
+        const selected = matchSelector.value;
+        let leaderboardData;
+        if (selected === "latest") {
+          leaderboardData = computeCumulativeLeaderboard("latest");
+          viewLabel.innerHTML = "🏆 Current Standings (Final)";
+          localStorage.removeItem("adpl_selected_match_index");
+        } else {
+          const matchNum = parseInt(selected, 10);
+          leaderboardData = computeCumulativeLeaderboard(matchNum);
+          viewLabel.innerHTML = `📊 Standings after Match ${matchNum}`;
+          localStorage.setItem("adpl_selected_match_index", selected);
+        }
+        renderLeaderboard(leaderboardData);
+      }
+      
+      async function init() {
+        try {
+          const [pointsRes, matchesRes] = await Promise.all([
+            fetch(pointsURL).then(r => r.json()),
+            fetch(matchURL).then(r => r.json())
+          ]);
+          pointsData = pointsRes;
+          matchData = matchesRes;
+          
+          // Build season points map and player list
+          pointsData.forEach(p => {
+            const player = p.Player;
+            if (player) {
+              seasonPointsMap[player] = parseFloat(p.SeasonPts) || 0;
+              if (!allPlayers.includes(player)) allPlayers.push(player);
+            }
+          });
+          // Ensure players from matchData are included
+          matchData.forEach(m => {
+            const player = m.Player;
+            if (player && !allPlayers.includes(player)) {
+              allPlayers.push(player);
+              if (!seasonPointsMap[player]) seasonPointsMap[player] = 0;
+            }
+          });
+          allPlayers.sort();
+          
+          // Extract unique match numbers from matchData (where WinnerPoints or MOTMPoints exist)
+          const matchNumbersSet = new Set();
+          matchData.forEach(m => {
+            const mn = getMatchNumber(m.Match);
+            if (mn !== 999) matchNumbersSet.add(mn);
+          });
+          uniqueMatchNumbers = Array.from(matchNumbersSet);
+          
+          await populateMatchSelector();
+          matchSelector.addEventListener("change", onMatchChange);
+          // Initial render (latest)
+          const initialLeaderboard = computeCumulativeLeaderboard("latest");
+          renderLeaderboard(initialLeaderboard);
+        } catch (err) {
+          console.error("Leaderboard init error:", err);
+          if (tbody) tbody.innerHTML = '<tr><td colspan="6">⚠️ Failed to load data. Check sheet access.</td></tr>';
+        }
+      }
+      
+      init();
+    })();
+    
+    // ========== THEME SELECTOR (keep existing) ==========
+    (function() {
+      const sel = document.getElementById('themeSelector');
+      if (!sel) return;
+      const saved = localStorage.getItem('adpl-theme') || 'csk';
+      document.documentElement.setAttribute('data-theme', saved);
+      sel.value = saved;
+      sel.addEventListener('change', (e) => {
+        document.documentElement.setAttribute('data-theme', e.target.value);
+        localStorage.setItem('adpl-theme', e.target.value);
+      });
+    })();
+  </script>
+  <!-- The external script.js is still loaded but we override its leaderboard fetch to avoid conflict -->
   <script src="script.js"></script>
+  <script>
+    // Prevent script.js from overwriting our enhanced leaderboard
+    // (script.js contains a leaderboard block that would replace our table)
+    // We simply let it execute, but since we already rendered, we force a re-render after a short delay.
+    setTimeout(() => {
+      const selector = document.getElementById('matchSelector');
+      if (selector && selector.value !== undefined) {
+        selector.dispatchEvent(new Event('change'));
+      }
+    }, 200);
+  </script>
 </body>
 </html>
